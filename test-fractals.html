@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Fractals Loading</title>
+</head>
+<body>
+    <h1>Testing Fractal Classes</h1>
+    <div id="output"></div>
+
+    <!-- Load scripts in order -->
+    <script src="src/utils/webgl-utils.js"></script>
+    <script src="src/utils/math-utils.js"></script>
+    <script src="src/utils/transform-utils.js"></script>
+    <script src="src/fractals/base-fractal.js"></script>
+    <script src="src/fractals/mandelbrot.js"></script>
+    <script src="src/fractals/julia.js"></script>
+    <script src="src/fractals/koch-curve.js"></script>
+    <script src="src/fractals/sierpinski.js"></script>
+    <script src="src/fractals/fractal-tree.js"></script>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            console.log(message);
+            output.innerHTML += message + '<br>';
+        }
+        
+        // Test if classes are loaded
+        log('Testing class loading...');
+        
+        const classes = {
+            'BaseFractal': BaseFractal,
+            'MandelbrotFractal': MandelbrotFractal,
+            'JuliaFractal': JuliaFractal,
+            'KochCurveFractal': KochCurveFractal,
+            'SierpinskiFractal': SierpinskiFractal,
+            'FractalTreeFractal': FractalTreeFractal
+        };
+        
+        for (const [name, cls] of Object.entries(classes)) {
+            if (typeof cls !== 'undefined') {
+                log(`✅ ${name} loaded successfully`);
+            } else {
+                log(`❌ ${name} NOT loaded`);
+            }
+        }
+        
+        // Test WebGL utils
+        if (typeof WebGLUtils !== 'undefined') {
+            log('✅ WebGLUtils loaded');
+        } else {
+            log('❌ WebGLUtils NOT loaded');
+        }
+        
+        // Test MathUtils
+        if (typeof MathUtils !== 'undefined') {
+            log('✅ MathUtils loaded');
+        } else {
+            log('❌ MathUtils NOT loaded');
+        }
+        
+        // Test TransformUtils
+        if (typeof TransformUtils !== 'undefined') {
+            log('✅ TransformUtils loaded');
+        } else {
+            log('❌ TransformUtils NOT loaded');
+        }
+    </script>
+</body>
+</html>

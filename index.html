@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FractalLab - Visualizador Interactivo de Fractales</title>
+    <link rel="stylesheet" href="assets/styles/main.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Scientific Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="app-title">FractalLab v3.2.1</div>
+                <div class="session-info">Session: fractal_visualizer_001 | User: researcher</div>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" id="exportBtn">export_data()</button>
+                <button class="header-btn" id="saveBtn">save_session()</button>
+                <button class="header-btn" id="captureBtn">capture_image()</button>
+                <button class="header-btn" id="resetViewBtn">reset_view()</button>
+            </div>
+        </header>
+
+        <!-- Parameter Panel -->
+        <aside class="params-panel">
+            <div class="params-section">
+                <div class="section-header">Fractal Type</div>
+                <div class="fractal-selector" id="fractalSelector">
+                    <div class="fractal-option" data-fractal="koch-curve">
+                        <span>📐</span> Koch Curve
+                    </div>
+                    <div class="fractal-option" data-fractal="sierpinski">
+                        <span>△</span> Sierpinski Triangle
+                    </div>
+                    <div class="fractal-option active" data-fractal="mandelbrot">
+                        <span>∞</span> Mandelbrot Set
+                    </div>
+                    <div class="fractal-option" data-fractal="julia">
+                        <span>∿</span> Julia Set
+                    </div>
+                    <div class="fractal-option" data-fractal="fractal-tree">
+                        <span>🌿</span> Fractal Tree
+                    </div>
+                </div>
+            </div>
+
+            <div class="params-section">
+                <div class="section-header">Computation Parameters</div>
+                
+                <div class="param-control">
+                    <div class="param-label">
+                        Max Iterations
+                        <span class="param-value" id="iter-val">1000</span>
+                    </div>
+                    <input type="range" class="scientific-slider" min="50" max="4000" value="1000" id="iterations">
+                    <input type="text" class="param-input" value="1000" id="iter-input">
+                </div>
+
+                <div class="param-control">
+                    <div class="param-label">
+                        Escape Radius
+                        <span class="param-value" id="radius-val">2.0</span>
+                    </div>
+                    <input type="range" class="scientific-slider" min="1" max="10" step="0.1" value="2" id="radius">
+                    <input type="text" class="param-input" value="2.0" id="radius-input">
+                </div>
+
+                <div class="param-control">
+                    <div class="param-label">
+                        Zoom Level
+                        <span class="param-value" id="zoom-val">1.0e+0</span>
+                    </div>
+                    <input type="range" class="scientific-slider" min="-10" max="15" step="0.1" value="0" id="zoom">
+                    <input type="text" class="param-input" value="1.0" id="zoom-input">
+                </div>
+
+                <div class="param-control">
+                    <div class="param-label">
+                        Recursion Depth
+                        <span class="param-value" id="depth-val">5</span>
+                    </div>
+                    <input type="range" class="scientific-slider" min="1" max="12" value="5" id="depth">
+                    <input type="text" class="param-input" value="5" id="depth-input">
+                </div>
+            </div>
+
+            <div class="params-section">
+                <div class="section-header">Calidad y Rendimiento</div>
+                
+                <div class="param-control">
+                    <div class="param-label">
+                        Calidad de Renderizado
+                        <span class="param-value" id="quality-val">Alto</span>
+                    </div>
+                    <select class="quality-select" id="quality">
+                        <option value="0.25">Muy Bajo (0.25x)</option>
+                        <option value="0.5">Bajo (0.5x)</option>
+                        <option value="0.6">Bajo+ (0.6x)</option>
+                        <option value="0.75">Medio- (0.75x)</option>
+                        <option value="0.8">Medio (0.8x)</option>
+                        <option value="0.9">Medio+ (0.9x)</option>
+                        <option value="1.0" selected>Alto (1.0x)</option>
+                        <option value="1.1">Alto+ (1.1x)</option>
+                        <option value="1.25">Super (1.25x)</option>
+                        <option value="1.4">Super+ (1.4x)</option>
+                        <option value="1.5">Ultra (1.5x)</option>
+                        <option value="1.6">Ultra+ (1.6x)</option>
+                        <option value="1.75">Ultra++ (1.75x)</option>
+                        <option value="2.0">Extremo (2.0x)</option>
+                        <option value="2.5">Extremo+ (2.5x)</option>
+                        <option value="3.0">Máximo (3.0x)</option>
+                        <option value="3.5">Máximo+ (3.5x)</option>
+                        <option value="4.0">Insano (4.0x)</option>
+                        <option value="5.0">Overkill (5.0x)</option>
+                        <option value="6.0">Anti-Pixel (6.0x)</option>
+                        <option value="8.0">Zoom Extremo (8.0x)</option>
+                        <option value="10.0">Zoom Insano (10.0x)</option>
+                    </select>
+                    <div class="param-hint">💡 Niveles altos eliminan pixelación pero consumen más GPU</div>
+                </div>
+
+
+            </div>
+
+            <div class="params-section">
+                <div class="section-header">Transform Controls</div>
+                <div class="transform-matrix">
+                    <button class="matrix-btn" data-action="move" data-dir="nw">↖</button>
+                    <button class="matrix-btn" data-action="move" data-dir="n">↑</button>
+                    <button class="matrix-btn" data-action="move" data-dir="ne">↗</button>
+                    <button class="matrix-btn" data-action="move" data-dir="w">←</button>
+                    <button class="matrix-btn" data-action="reset">⌂</button>
+                    <button class="matrix-btn" data-action="move" data-dir="e">→</button>
+                    <button class="matrix-btn" data-action="move" data-dir="sw">↙</button>
+                    <button class="matrix-btn" data-action="move" data-dir="s">↓</button>
+                    <button class="matrix-btn" data-action="move" data-dir="se">↘</button>
+                </div>
+                
+                <div class="param-control" style="margin-top: 15px;">
+                    <div class="param-label">Center X</div>
+                    <input type="text" class="param-input" value="-0.5" id="center-x">
+                </div>
+                
+                <div class="param-control">
+                    <div class="param-label">Center Y</div>
+                    <input type="text" class="param-input" value="0.0" id="center-y">
+                </div>
+
+                <div class="param-control">
+                    <div class="param-label">
+                        Rotation (°)
+                        <span class="param-value" id="rotation-val">0</span>
+                    </div>
+                    <input type="range" class="scientific-slider" min="0" max="360" value="0" id="rotation">
+                    <input type="text" class="param-input" value="0" id="rotation-input">
+                </div>
+            </div>
+
+            <div class="params-section" id="juliaParams" style="display: none;">
+                <div class="section-header">Julia Set Parameters</div>
+                <div class="param-control">
+                    <div class="param-label">Constant C (Real)</div>
+                    <input type="text" class="param-input" value="-0.7" id="julia-c-real">
+                </div>
+                <div class="param-control">
+                    <div class="param-label">Constant C (Imaginary)</div>
+                    <input type="text" class="param-input" value="0.27015" id="julia-c-imag">
+                </div>
+            </div>
+        </aside>
+
+        <!-- Canvas Area -->
+        <main class="canvas-area">
+            <div class="viewport">
+                <canvas id="fractalCanvas" class="fractal-canvas"></canvas>
+                
+                <div class="viewport-info">
+                    Rendering: WebGL | Memory: <span id="memoryUsage">0</span>MB | FPS: <span id="fpsCounter">60</span>
+                </div>
+                
+                <!-- Performance Warning for extreme zooms -->
+                <div class="performance-warning" id="performanceWarning" style="display: none; position: absolute; top: 10px; right: 10px; background: rgba(255, 165, 0, 0.9); color: black; padding: 10px; border-radius: 5px; font-weight: bold; z-index: 1000;">
+                    ⚠️ Zoom extremo - Renderizado lento pero sin pixelación
+                </div>
+                
+                <!-- Zoom Tips -->
+                <div class="zoom-tips" id="zoomTips" style="display: none; position: absolute; top: 50px; right: 10px; background: rgba(0, 200, 0, 0.9); color: white; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 1000; max-width: 300px;">
+                    <div class="tip-text">
+                        💡 <strong>Tip de Zoom Infinito:</strong><br>
+                        Si ves pixelación, aumenta las iteraciones manualmente.<br>
+                        Más iteraciones = más detalles visibles.
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <button id="autoFixIterations" onclick="window.autoFixIterations()" style="background: #4CAF50; border: none; color: white; padding: 4px 12px; margin-right: 5px; border-radius: 3px; cursor: pointer; font-size: 11px;">🔧 Auto-Fix</button>
+                        <button onclick="document.getElementById('zoomTips').style.display='none'" style="background: none; border: 1px solid white; color: white; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Entendido</button>
+                    </div>
+                </div>
+                
+                <div class="coordinates" id="coords">
+                    Re: 0.000 | Im: 0.000
+                </div>
+            </div>
+        </main>
+
+        <!-- Data Panel -->
+        <aside class="data-panel">
+            <div class="data-section">
+                <div class="data-header">MÉTRICAS DE RENDIMIENTO</div>
+                <div class="metric-item">
+                    <span class="metric-label">Tiempo de Render:</span>
+                    <span class="metric-value" id="renderTime">0.0ms</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Convergencia:</span>
+                    <span class="metric-value" id="convergence">85%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">FPS:</span>
+                    <span class="metric-value" id="fpsCounter" style="font-weight: bold; font-size: 1.1em;">60</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">CPU:</span>
+                    <span class="metric-value" id="cpuUsage">0% (0 cores)</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">GPU:</span>
+                    <span class="metric-value" id="gpuUsage">0%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Memoria:</span>
+                    <span class="metric-value" id="memoryUsage">0.0 MB</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Hardware:</span>
+                    <span class="metric-value" id="gpuInfo" style="font-size: 0.8em;">Detectando...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="transition: width 0.3s ease, background-color 0.3s ease;"></div>
+                </div>
+            </div>
+
+            <div class="data-section">
+                <div class="data-header">Análisis Estadístico</div>
+                <div class="metric-item">
+                    <span class="metric-label">Dimensión Fractal:</span>
+                    <span class="metric-value" id="fractalDimension">0.000</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Puntos de Frontera:</span>
+                    <span class="metric-value" id="boundaryPoints">0</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Area Ratio:</span>
+                    <span class="metric-value" id="areaRatio">0.000</span>
+                </div>
+            </div>
+
+            <div class="data-section">
+                <div class="data-header">Iteration Histogram</div>
+                <div class="data-graph" id="iterationGraph">
+                    <!-- Bars will be generated dynamically -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Console -->
+        <footer class="console">
+            <div class="console-header">
+                <span>🔬</span>
+                Computation Log & Debug Output
+                <button class="console-clear" id="clearConsole">Clear</button>
+            </div>
+            <div class="console-content" id="consoleContent">
+                <!-- Log entries will be added dynamically -->
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="src/utils/webgl-utils.js"></script>
+    <script src="src/utils/math-utils.js"></script>
+    <script src="src/utils/transform-utils.js"></script>
+    <script src="src/fractals/base-fractal.js"></script>
+    <script src="src/fractals/mandelbrot.js"></script>
+    <script src="src/fractals/julia.js"></script>
+    <script src="src/fractals/koch-curve.js"></script>
+    <script src="src/fractals/sierpinski.js"></script>
+    <script src="src/fractals/fractal-tree.js"></script>
+    <script src="src/ui/controls.js"></script>
+    <script src="src/ui/console.js"></script>
+    <script src="src/ui/performance-monitor.js"></script>
+    <script src="src/app.js"></script>
+    
+    <!-- Initialize Application -->
+    <script>
+        console.log('Starting FractalLab initialization...');
+        
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM loaded, initializing app...');
+            
+            try {
+                const app = new FractalApp();
+                window.fractalApp = app; // Make it globally accessible for debugging
+                
+                const success = await app.initialize();
+                if (success) {
+                    console.log('✅ FractalLab initialized successfully');
+                    app.start();
+                } else {
+                    console.error('❌ Failed to initialize FractalLab');
+                }
+            } catch (error) {
+                console.error('❌ Error during initialization:', error);
+            }
+        });
+    </script>
+        <script>
+            // Auto-fix iterations function
+            window.autoFixIterations = function() {
+                if (window.app && window.app.currentFractal) {
+                    const zoom = window.app.currentFractal.parameters.zoom;
+                    const quality = window.app.qualitySettings.renderScale;
+                    
+                    // Calculate recommended iterations
+                    let recommendedIterations;
+                    if (zoom < 1000) {
+                        recommendedIterations = Math.floor(zoom * 3 * quality);
+                    } else if (zoom < 10000) {
+                        recommendedIterations = Math.floor(zoom * 1.5 * quality);
+                    } else {
+                        recommendedIterations = Math.floor(zoom * 0.8 * quality);
+                    }
+                    
+                    recommendedIterations = Math.min(recommendedIterations, 15000);
+                    recommendedIterations = Math.max(recommendedIterations, 100);
+                    
+                    // Apply the fix
+                    window.app.currentFractal.updateParameters({ maxIterations: recommendedIterations });
+                    
+                    // Update UI
+                    const iterationSlider = document.getElementById('maxIterations');
+                    const iterationValue = document.getElementById('iterations-val');
+                    if (iterationSlider) iterationSlider.value = recommendedIterations;
+                    if (iterationValue) iterationValue.textContent = recommendedIterations;
+                    
+                    // Hide the tip
+                    document.getElementById('zoomTips').style.display = 'none';
+                    
+                    console.log(`🔧 Auto-fix aplicado: ${recommendedIterations} iteraciones para zoom ${zoom.toFixed(1)}x`);
+                }
+            };
+        </script>
+    </body>
+</html>

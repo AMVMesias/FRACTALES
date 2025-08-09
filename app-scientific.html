@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FractalLab - Interfaz Científica</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-layout {
+            display: grid;
+            grid-template-areas:
+                "header header header"
+                "params canvas data"
+                "console console console";
+            grid-template-columns: 280px 1fr 250px;
+            grid-template-rows: 45px 1fr 200px;
+            height: 100vh;
+            gap: 1px;
+            background: #11111b;
+        }
+
+        /* Scientific Header */
+        .header {
+            grid-area: header;
+            background: #181825;
+            border-bottom: 1px solid #313244;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .app-title {
+            font-family: 'Source Code Pro', monospace;
+            font-weight: 600;
+            color: #89b4fa;
+            font-size: 1rem;
+        }
+
+        .session-info {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.8rem;
+            color: #a6adc8;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
+            background: rgba(137, 180, 250, 0.1);
+            border: 1px solid #313244;
+            color: #89b4fa;
+            padding: 6px 12px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: rgba(137, 180, 250, 0.2);
+            border-color: #89b4fa;
+        }
+
+        /* Parameter Panel */
+        .params-panel {
+            grid-area: params;
+            background: #181825;
+            border-right: 1px solid #313244;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .params-section {
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.8rem;
+            color: #f38ba8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #313244;
+        }
+
+        .fractal-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .fractal-option {
+            background: #1e1e2e;
+            border: 1px solid #313244;
+            color: #cdd6f4;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .fractal-option:hover {
+            border-color: #89b4fa;
+            background: rgba(137, 180, 250, 0.1);
+        }
+
+        .fractal-option.active {
+            background: rgba(137, 180, 250, 0.2);
+            border-color: #89b4fa;
+            color: #89b4fa;
+        }
+
+        .param-control {
+            margin-bottom: 15px;
+        }
+
+        .param-label {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.75rem;
+            color: #a6adc8;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .param-value {
+            color: #f9e2af;
+            font-weight: 500;
+        }
+
+        .scientific-slider {
+            width: 100%;
+            height: 2px;
+            background: #313244;
+            border-radius: 1px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .scientific-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #89b4fa;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .param-input {
+            background: #1e1e2e;
+            border: 1px solid #313244;
+            color: #cdd6f4;
+            padding: 6px 8px;
+            border-radius: 3px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.75rem;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .param-input:focus {
+            outline: none;
+            border-color: #89b4fa;
+        }
+
+        .transform-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px;
+        }
+
+        .matrix-btn {
+            background: #1e1e2e;
+            border: 1px solid #313244;
+            color: #a6adc8;
+            padding: 8px 4px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+        }
+
+        .matrix-btn:hover {
+            background: rgba(137, 180, 250, 0.1);
+            border-color: #89b4fa;
+            color: #89b4fa;
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            grid-area: canvas;
+            background: #11111b;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .viewport {
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
+            background: #000000;
+            border: 1px solid #313244;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fractal-display {
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(137, 180, 250, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(243, 139, 168, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, #000000 0%, #0a0a0f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(137, 180, 250, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(137, 180, 250, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+
+        .fractal-preview {
+            text-align: center;
+            color: #6c7086;
+            font-family: 'Source Code Pro', monospace;
+        }
+
+        .preview-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.7;
+        }
+
+        .preview-equation {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: #f38ba8;
+        }
+
+        .preview-stats {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .viewport-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(17, 17, 27, 0.9);
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.7rem;
+            color: #a6adc8;
+            border: 1px solid #313244;
+        }
+
+        .coordinates {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(17, 17, 27, 0.9);
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.7rem;
+            color: #f9e2af;
+            border: 1px solid #313244;
+        }
+
+        /* Data Panel */
+        .data-panel {
+            grid-area: data;
+            background: #181825;
+            border-left: 1px solid #313244;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .data-section {
+            margin-bottom: 20px;
+        }
+
+        .data-header {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.8rem;
+            color: #a6e3a1;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.75rem;
+        }
+
+        .metric-label {
+            color: #a6adc8;
+        }
+
+        .metric-value {
+            color: #f9e2af;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #313244;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #a6e3a1, #89b4fa);
+            width: 65%;
+            transition: width 0.3s;
+        }
+
+        .data-graph {
+            background: #1e1e2e;
+            border: 1px solid #313244;
+            border-radius: 4px;
+            height: 80px;
+            display: flex;
+            align-items: end;
+            padding: 5px;
+            gap: 2px;
+        }
+
+        .graph-bar {
+            flex: 1;
+            background: linear-gradient(to top, #89b4fa, #b4befe);
+            border-radius: 1px;
+        }
+
+        /* Console */
+        .console {
+            grid-area: console;
+            background: #181825;
+            border-top: 1px solid #313244;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .console-header {
+            background: #1e1e2e;
+            border-bottom: 1px solid #313244;
+            padding: 8px 15px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.8rem;
+            color: #f38ba8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .console-content {
+            flex: 1;
+            padding: 10px 15px;
+            overflow-y: auto;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.75rem;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .log-time {
+            color: #6c7086;
+            min-width: 60px;
+        }
+
+        .log-level {
+            min-width: 45px;
+            font-weight: 500;
+        }
+
+        .log-level.info { color: #89b4fa; }
+        .log-level.warn { color: #f9e2af; }
+        .log-level.error { color: #f38ba8; }
+        .log-level.debug { color: #a6e3a1; }
+
+        .log-message {
+            color: #cdd6f4;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .app-layout {
+                grid-template-columns: 250px 1fr 220px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Scientific Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="app-title">FractalLab v3.2.1</div>
+                <div class="session-info">Session: mandelbrot_study_001 | User: researcher</div>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn">export_data()</button>
+                <button class="header-btn">save_session()</button>
+                <button class="header-btn">new_experiment()</button>
+            </div>
+        </header>
+
+        <!-- Parameter Panel -->
+        <aside class="params-panel">
+            <div class="params-section">
+                <div class="section-header">Fractal Type</div>
+                <div class="fractal-selector">
+                    <div class="fractal-option">
+                        <span>📐</span> Koch Curve
+                    </div>
+                    <div class="fractal-option">
+                        <span>△</span> Sierpinski Triangle
+                    </div>
+                    <div class="fractal-option active">
+                        <span>∞</span> Mandelbrot Set
+                    </div>
+                    <div class="fractal-option">
+                        <span>∿</span> Julia Set
+                    </div>
+                    <div class="fractal-option">
+                        <span>🌿</span> Fractal Tree
+                    </div>
+                </div>
+            </div>
+
+            <div class="params-section">
+                <div class="section-header">Computation Parameters</div>
+                
+                <div class="param-control">
+                    <div class="param-label">
+                        Max Iterations
+                        <span class="param-value" id="iter-val">256</span>
+                    </div>
+                    <input type="range" class="scientific-slider" min="50" max="1000" value="256" id="iterations">
+                    <input type="text" class="param-input" value="256" id="iter-input">
+                </div>
+
+                <div class="param-control">
+                    <div class="param-label">
+                        Escape Radius
+                        <span class="param-value" id="radius-val">2.0</span>
+                    </div>
+                    <input type="range" class="scientific-slider" min="1" max="10" step="0.1" value="2" id="radius">
+                    <input type="text" class="param-input" value="2.0" id="radius-input">
+                </div>
+
+                <div class="param-control">
+                    <div class="param-label">
+                        Zoom Level
+                        <span class="param-value" id="zoom-val">1.0e+0</span>
+                    </div>
+                    <input type="range" class="scientific-slider" min="-5" max="5" step="0.1" value="0" id="zoom">
+                    <input type="text" class="param-input" value="1.0" id="zoom-input">
+                </div>
+            </div>
+
+            <div class="params-section">
+                <div class="section-header">Transform Matrix</div>
+                <div class="transform-matrix">
+                    <button class="matrix-btn">↖</button>
+                    <button class="matrix-btn">↑</button>
+                    <button class="matrix-btn">↗</button>
+                    <button class="matrix-btn">←</button>
+                    <button class="matrix-btn">⌂</button>
+                    <button class="matrix-btn">→</button>
+                    <button class="matrix-btn">↙</button>
+                    <button class="matrix-btn">↓</button>
+                    <button class="matrix-btn">↘</button>
+                </div>
+                
+                <div class="param-control" style="margin-top: 15px;">
+                    <div class="param-label">Center X</div>
+                    <input type="text" class="param-input" value="-0.5" id="center-x">
+                </div>
+                
+                <div class="param-control">
+                    <div class="param-label">Center Y</div>
+                    <input type="text" class="param-input" value="0.0" id="center-y">
+                </div>
+            </div>
+        </aside>
+
+        <!-- Canvas Area -->
+        <main class="canvas-area">
+            <div class="viewport">
+                <div class="fractal-display">
+                    <div class="grid-overlay"></div>
+                    <div class="fractal-preview">
+                        <div class="preview-icon">∞</div>
+                        <div class="preview-equation">z₍ₙ₊₁₎ = z²ₙ + c</div>
+                        <div class="preview-stats">Complex plane analysis | 256 iterations</div>
+                    </div>
+                </div>
+                
+                <div class="viewport-info">
+                    Rendering: GPU | Memory: 128MB | FPS: 60
+                </div>
+                
+                <div class="coordinates" id="coords">
+                    Re: 0.000 | Im: 0.000
+                </div>
+            </div>
+        </main>
+
+        <!-- Data Panel -->
+        <aside class="data-panel">
+            <div class="data-section">
+                <div class="data-header">Performance Metrics</div>
+                <div class="metric-item">
+                    <span class="metric-label">Render Time:</span>
+                    <span class="metric-value">23.4ms</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Convergence:</span>
+                    <span class="metric-value">94.2%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">GPU Usage:</span>
+                    <span class="metric-value">67%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="data-section">
+                <div class="data-header">Statistical Analysis</div>
+                <div class="metric-item">
+                    <span class="metric-label">Fractal Dimension:</span>
+                    <span class="metric-value">2.003</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Boundary Points:</span>
+                    <span class="metric-value">15,342</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Area Ratio:</span>
+                    <span class="metric-value">0.624</span>
+                </div>
+            </div>
+
+            <div class="data-section">
+                <div class="data-header">Iteration Histogram</div>
+                <div class="data-graph">
+                    <div class="graph-bar" style="height: 20%"></div>
+                    <div class="graph-bar" style="height: 40%"></div>
+                    <div class="graph-bar" style="height: 80%"></div>
+                    <div class="graph-bar" style="height: 100%"></div>
+                    <div class="graph-bar" style="height: 75%"></div>
+                    <div class="graph-bar" style="height: 45%"></div>
+                    <div class="graph-bar" style="height: 25%"></div>
+                    <div class="graph-bar" style="height: 10%"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Console -->
+        <footer class="console">
+            <div class="console-header">
+                <span>🔬</span>
+                Computation Log & Debug Output
+            </div>
+            <div class="console-content">
+                <div class="log-entry">
+                    <span class="log-time">14:23:01</span>
+                    <span class="log-level info">INFO</span>
+                    <span class="log-message">Mandelbrot computation started with 256 iterations</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-time">14:23:01</span>
+                    <span class="log-level debug">DEBUG</span>
+                    <span class="log-message">GPU memory allocated: 128MB</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-time">14:23:02</span>
+                    <span class="log-level info">INFO</span>
+                    <span class="log-message">Render completed in 23.4ms</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-time">14:23:02</span>
+                    <span class="log-level debug">DEBUG</span>
+                    <span class="log-message">Convergence analysis: 94.2% of points computed</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-time">14:23:03</span>
+                    <span class="log-level warn">WARN</span>
+                    <span class="log-message">High iteration count may affect performance</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Fractal selection
+        document.querySelectorAll('.fractal-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelector('.fractal-option.active').classList.remove('active');
+                this.classList.add('active');
+                updateEquation();
+                addLogEntry('info', `Switched to ${this.textContent.trim()}`);
+            });
+        });
+
+        // Parameter sliders with scientific notation
+        function setupScientificSlider(sliderId, displayId, inputId, formatter) {
+            const slider = document.getElementById(sliderId);
+            const display = document.getElementById(displayId);
+            const input = document.getElementById(inputId);
+            
+            slider.addEventListener('input', function() {
+                const value = formatter(this.value);
+                display.textContent = value;
+                input.value = value;
+                updatePreview();
+            });
+            
+            input.addEventListener('change', function() {
+                const value = parseFloat(this.value);
+                if (!isNaN(value)) {
+                    display.textContent = formatter(value);
+                    addLogEntry('debug', `Parameter updated: ${inputId} = ${value}`);
+                }
+            });
+        }
+
+        setupScientificSlider('iterations', 'iter-val', 'iter-input', val => val);
+        setupScientificSlider('radius', 'radius-val', 'radius-input', val => parseFloat(val).toFixed(1));
+        setupScientificSlider('zoom', 'zoom-val', 'zoom-input', val => {
+            const zoom = Math.pow(10, val);
+            return zoom < 0.01 ? zoom.toExponential(1) : zoom.toFixed(zoom < 1 ? 3 : 1);
+        });
+
+        // Transform matrix
+        document.querySelectorAll('.matrix-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.style.background = 'rgba(137, 180, 250, 0.3)';
+                setTimeout(() => {
+                    this.style.background = '';
+                }, 200);
+                addLogEntry('debug', `Transform applied: ${this.textContent}`);
+            });
+        });
+
+        // Mouse tracking with complex coordinates
+        document.querySelector('.fractal-display').addEventListener('mousemove', function(e) {
+            const rect = this.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+            
+            // Convert to complex plane coordinates
+            const re = (x - 0.5) * 4 - 0.5;
+            const im = (0.5 - y) * 4;
+            
+            document.getElementById('coords').textContent = 
+                `Re: ${re.toFixed(3)} | Im: ${im.toFixed(3)}`;
+        });
+
+        function updateEquation() {
+            const active = document.querySelector('.fractal-option.active').textContent;
+            const equations = {
+                'Koch Curve': 'L → L+R++R-L--LL-R+',
+                'Sierpinski Triangle': 'A → B-A-B, B → A+B+A',
+                'Mandelbrot Set': 'z₍ₙ₊₁₎ = z²ₙ + c',
+                'Julia Set': 'z₍ₙ₊₁₎ = z²ₙ + c (fixed c)',
+                'Fractal Tree': 'θ = 30°, L → L[+L][-L]'
+            };
+            
+            document.querySelector('.preview-equation').textContent = 
+                equations[active.trim()] || 'Custom equation';
+        }
+
+        function updatePreview() {
+            const iterations = document.getElementById('iterations').value;
+            const zoom = document.getElementById('zoom-val').textContent;
+            
+            document.querySelector('.preview-stats').textContent = 
+                `Complex plane analysis | ${iterations} iterations | Zoom: ${zoom}`;
+        }
+
+        function addLogEntry(level, message) {
+            const console = document.querySelector('.console-content');
+            const time = new Date().toLocaleTimeString('en-GB');
+            
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-level ${level}">${level.toUpperCase()}</span>
+                <span class="log-message">${message}</span>
+            `;
+            
+            console.appendChild(entry);
+            console.scrollTop = console.scrollHeight;
+            
+            // Keep only last 20 entries
+            if (console.children.length > 20) {
+                console.removeChild(console.firstChild);
+            }
+        }
+
+        // Simulate real-time data updates
+        setInterval(() => {
+            const renderTime = (Math.random() * 10 + 20).toFixed(1);
+            const convergence = (Math.random() * 5 + 90).toFixed(1);
+            const gpuUsage = Math.floor(Math.random() * 30 + 50);
+            
+            document.querySelectorAll('.metric-value')[0].textContent = renderTime + 'ms';
+            document.querySelectorAll('.metric-value')[1].textContent = convergence + '%';
+            document.querySelectorAll('.metric-value')[2].textContent = gpuUsage + '%';
+            
+            document.querySelector('.progress-fill').style.width = convergence + '%';
+        }, 2000);
+    </script>
+</body>
+</html>

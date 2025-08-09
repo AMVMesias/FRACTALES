@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Classes</title>
+</head>
+<body>
+    <h1>Testing Fractal Classes</h1>
+    <div id="results"></div>
+
+    <!-- Scripts in order -->
+    <script src="src/utils/webgl-utils.js"></script>
+    <script src="src/utils/math-utils.js"></script>
+    <script src="src/utils/transform-utils.js"></script>
+    <script src="src/fractals/base-fractal.js"></script>
+    <script src="src/fractals/mandelbrot.js"></script>
+    <script src="src/fractals/julia.js"></script>
+    <script src="src/fractals/koch-curve.js"></script>
+    <script src="src/fractals/sierpinski.js"></script>
+    <script src="src/fractals/fractal-tree.js"></script>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        function testClass(name, className) {
+            try {
+                const exists = typeof window[className] === 'function';
+                results.innerHTML += `<p>${name}: ${exists ? '✅ OK' : '❌ NOT FOUND'}</p>`;
+                
+                if (exists) {
+                    console.log(`${name} class found:`, window[className]);
+                } else {
+                    console.error(`${name} class not found`);
+                }
+            } catch (error) {
+                results.innerHTML += `<p>${name}: ❌ ERROR - ${error.message}</p>`;
+                console.error(`Error testing ${name}:`, error);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            results.innerHTML += '<h2>Class Tests:</h2>';
+            
+            testClass('BaseFractal', 'BaseFractal');
+            testClass('MandelbrotFractal', 'MandelbrotFractal');
+            testClass('JuliaFractal', 'JuliaFractal');
+            testClass('KochCurveFractal', 'KochCurveFractal');
+            testClass('SierpinskiFractal', 'SierpinskiFractal');
+            testClass('FractalTreeFractal', 'FractalTreeFractal');
+            
+            // List all available classes
+            console.log('All window properties with "Fractal":', 
+                Object.keys(window).filter(key => key.includes('Fractal')));
+        });
+    </script>
+</body>
+</html>
