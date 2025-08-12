@@ -1,43 +1,71 @@
 /**
- * Main Application for Fractal Visualizer
- * Coordinates all components and manages the render loop
+ * FractalLab - Visualizador Interactivo de Fractales
+ * 
+ * Aplicación principal que coordina todos los componentes del visualizador:
+ * - Renderizado WebGL de alta calidad
+ * - Interfaz de usuario intuitiva
+ * - Modo pantalla completa para exploración inmersiva
+ * - Controles de zoom infinito con optimización automática
+ * - Guardado de imágenes en alta resolución
+ * 
+ * Coordina todos los componentes y maneja el bucle de renderizado principal.
  */
 
 class FractalApp {
     constructor() {
+        // Elementos principales del canvas y WebGL
         this.canvas = null;
         this.gl = null;
         this.viewport = null;
+        
+        // Gestores de entrada y controles
         this.inputHandler = null;
         this.keyboardHandler = null;
+        
+        // Sistema de fractales
         this.currentFractal = null;
         this.fractals = new Map();
+        
+        // Control de renderizado y rendimiento
         this.isRunning = false;
         this.lastFrameTime = 0;
         this.frameCount = 0;
         this.fps = 60;
+        
+        // Componentes de la interfaz
         this.performanceMonitor = null;
         this.uiControls = null;
         this.consoleManager = null;
         
-        // Quality settings
+        // Flag para prevenir descargas múltiples de imágenes
+        this.isCapturing = false;
+        
+        // Configuración de calidad de renderizado
         this.qualitySettings = {
-            renderScale: 1.0,
-            precisionMode: 'float',
-            antialiasingLevel: 0,
-            highPrecision: false
+            renderScale: 1.0,        // Escala de resolución (1.0 = resolución nativa)
+            precisionMode: 'float',  // Precisión de punto flotante
+            antialiasingLevel: 0,    // Nivel de antialiasing
+            highPrecision: false     // Modo alta precisión para zooms extremos
         };
         
-        // Animation and timing
+        // Control de animación y tiempo
         this.animationId = null;
         this.startTime = performance.now();
         
-        // Initialization flag
+        // Flag de inicialización
         this.isInitialized = false;
     }
 
     /**
-     * Initialize the application
+     * Inicializar la aplicación FractalLab
+     * 
+     * Configura todos los componentes necesarios:
+     * - Contexto WebGL con configuración optimizada
+     * - Sistema de viewport y controles de entrada
+     * - Interfaz de usuario y controles
+     * - Carga inicial de fractales disponibles
+     * 
+     * @returns {boolean} true si la inicialización fue exitosa
      */
     async initialize() {
         try {
@@ -71,10 +99,12 @@ class FractalApp {
             // Initialize viewport and input handling
             this.viewport = new TransformUtils.Viewport();
             this.inputHandler = new TransformUtils.InputHandler(this.canvas, this.viewport, this);
-            this.keyboardHandler = new TransformUtils.KeyboardHandler(this.viewport);
             
-            // Initialize UI components
+            // Initialize UI components first
             this.initializeUI();
+            
+            // Initialize keyboard handler with UI controls reference
+            this.keyboardHandler = new TransformUtils.KeyboardHandler(this.viewport, this.uiControls);
             // Hook reset view button
             const resetBtn = document.getElementById('resetViewBtn');
             if (resetBtn) {
@@ -230,6 +260,7 @@ class FractalApp {
      * Stop the render loop
      */
     stop() {
+        if (!this.isRunning) return;
         this.isRunning = false;
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
@@ -239,11 +270,48 @@ class FractalApp {
     }
 
     /**
+     * Handle canvas resize (normal y fullscreen)
+     * @param {boolean} force - Forzar actualización de viewport
+     */
+    resize(force = false) {
+        if (!this.canvas || !this.gl) return;
+
+        try {
+            // Si estamos en fullscreen sobre .viewport, ajustar canvas a pantalla completa
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+            if (isFullscreen) {
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                if (force || this.canvas.width !== vw || this.canvas.height !== vh) {
+                    this.canvas.style.width = vw + 'px';
+                    this.canvas.style.height = vh + 'px';
+                    this.canvas.width = vw * (window.devicePixelRatio || 1);
+                    this.canvas.height = vh * (window.devicePixelRatio || 1);
+                    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+                    this.log('debug', `Fullscreen resize -> ${this.canvas.width}x${this.canvas.height}`);
+                    if (this.currentFractal) this.currentFractal.markDirty();
+                }
+                return;
+            }
+
+            const resized = WebGLUtils.resizeCanvasToDisplaySize(this.canvas, this.gl);
+            if (resized) {
+                this.log('debug', `Canvas resized to ${this.canvas.width}x${this.canvas.height}`);
+                if (this.currentFractal) this.currentFractal.markDirty();
+            } else if (force) {
+                // Forzar viewport aunque no cambie dimensiones lógicas
+                this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+            }
+        } catch (error) {
+            this.log('error', `Resize failed: ${error.message}`);
+        }
+    }
+
+    /**
      * Main render loop
      */
     renderLoop() {
         if (!this.isRunning) return;
-        
         const currentTime = performance.now();
         const deltaTime = currentTime - this.lastFrameTime;
         const time = (currentTime - this.startTime) / 1000;
@@ -282,7 +350,7 @@ class FractalApp {
         }
         
         // Schedule next frame
-        this.animationId = requestAnimationFrame(() => this.renderLoop());
+    this.animationId = requestAnimationFrame(() => this.renderLoop());
     }
 
     /**
@@ -491,70 +559,51 @@ class FractalApp {
     }
 
     /**
-     * Export current fractal data
-     */
-    exportData() {
-        if (!this.currentFractal) {
-            this.log('error', 'No fractal to export');
-            return null;
-        }
-        
-        const data = {
-            ...this.currentFractal.exportData(),
-            viewport: {
-                centerX: this.viewport.centerX,
-                centerY: this.viewport.centerY,
-                zoom: this.viewport.zoom,
-                rotation: this.viewport.rotation
-            },
-            canvas: {
-                width: this.canvas.width,
-                height: this.canvas.height
-            }
-        };
-        
-        this.log('info', 'Fractal data exported');
-        return data;
-    }
-
-    /**
-     * Save current session
-     */
-    saveSession() {
-        const data = this.exportData();
-        if (data) {
-            const json = JSON.stringify(data, null, 2);
-            const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `fractal_session_${new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')}.json`;
-            a.click();
-            
-            URL.revokeObjectURL(url);
-            this.log('info', 'Session saved');
-        }
-    }
-
-    /**
-     * Capture current fractal as image
+     * Capturar imagen actual del fractal
+     * Función mejorada que evita descargas duplicadas
      */
     captureImage() {
         if (!this.canvas) {
-            this.log('error', 'No canvas to capture');
+            this.log('error', 'No hay canvas para capturar');
             return;
         }
         
         try {
-            const link = document.createElement('a');
-            link.download = `fractal_${this.currentFractal.getName()}_${Date.now()}.png`;
-            link.href = this.canvas.toDataURL('image/png');
-            link.click();
+            // Prevenir múltiples descargas simultáneas
+            if (this.isCapturing) {
+                this.log('warning', 'Captura ya en progreso...');
+                return;
+            }
             
-            this.log('info', 'Image captured and downloaded');
+            this.isCapturing = true;
+            
+            // Crear nombre de archivo descriptivo
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
+            const fractalName = this.currentFractal ? this.currentFractal.getName().toLowerCase() : 'fractal';
+            const zoom = this.viewport ? this.viewport.zoom.toExponential(2) : '1e0';
+            
+            const filename = `fractal_${fractalName}_zoom_${zoom}_${timestamp}.png`;
+            
+            // Crear enlace de descarga
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = this.canvas.toDataURL('image/png', 1.0); // Máxima calidad
+            
+            // Descargar archivo
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            this.log('info', `Imagen capturada: ${filename}`);
+            
+            // Liberar flag después de un pequeño delay
+            setTimeout(() => {
+                this.isCapturing = false;
+            }, 1000);
+            
         } catch (error) {
-            this.log('error', `Failed to capture image: ${error.message}`);
+            this.log('error', `Error al capturar imagen: ${error.message}`);
+            this.isCapturing = false;
         }
     }
 

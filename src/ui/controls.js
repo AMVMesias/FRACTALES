@@ -23,6 +23,10 @@ class UIControls {
         this.setupQualityControls();
         this.setupHeaderButtons();
         this.setupJuliaControls();
+    // Color controls removed
+        
+        // Setup fullscreen listeners
+        this.setupFullscreenListeners();
         
         console.log('UI Controls initialized');
     }
@@ -64,7 +68,7 @@ class UIControls {
             const zoom = Math.pow(10, val);
             return this.formatScientific(zoom);
         });
-        this.setupSliderControl('depth', 'depth-val', 'depth-input', val => val);
+    this.setupSliderControl('depth', 'depth-val', 'depth-input', val => val);
         this.setupSliderControl('rotation', 'rotation-val', 'rotation-input', val => val);
         
         // Setup center coordinate inputs
@@ -167,7 +171,8 @@ class UIControls {
                         return Math.max(0.00001, value); // Unlimited zoom for mathematical
                     }
                 case 'depth':
-                    return Math.max(1, Math.min(12, value));
+                    // Allow depth up to 30 as per updated requirement
+                    return Math.max(1, Math.min(30, value));
                 case 'rotation':
                     return value % 360;
                 default:
@@ -341,35 +346,346 @@ class UIControls {
      * Setup header button handlers
      */
     setupHeaderButtons() {
-        const exportBtn = document.getElementById('exportBtn');
-        const saveBtn = document.getElementById('saveBtn');
         const captureBtn = document.getElementById('captureBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
         
-        if (exportBtn) {
-            exportBtn.addEventListener('click', () => {
-                const data = this.app.exportData();
-                if (data) {
-                    console.log('Exported data:', data);
-                    // Copy to clipboard
-                    navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-                    this.showToast('Data exported to clipboard');
+        // Botón de captura de imagen
+        if (captureBtn) {
+            captureBtn.addEventListener('click', () => {
+                this.app.captureImage();
+                this.showToast('Imagen guardada correctamente');
+            });
+        }
+        
+        // Botón de modo pantalla completa
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', () => {
+                this.toggleFullscreen();
+            });
+        }
+        
+        // Setup fullscreen floating controls
+        this.setupFullscreenControls();
+    }
+    
+    /**
+     * Setup fullscreen floating controls
+     */
+    setupFullscreenControls() {
+        const captureFullscreenBtn = document.getElementById('captureFullscreenBtn');
+        const resetFullscreenBtn = document.getElementById('resetFullscreenBtn');
+        const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn');
+        const toggleIterationsBtn = document.getElementById('toggleIterationsBtn');
+        const toggleParamsBtn = document.getElementById('toggleParamsBtn');
+        
+        // Botón de captura en fullscreen
+        if (captureFullscreenBtn) {
+            captureFullscreenBtn.addEventListener('click', () => {
+                this.app.captureImage();
+                this.showToast('Imagen guardada en modo pantalla completa');
+            });
+        }
+        
+        // Botón de reset en fullscreen
+        if (resetFullscreenBtn) {
+            resetFullscreenBtn.addEventListener('click', () => {
+                this.app.getViewport().reset();
+                this.showToast('Vista reiniciada');
+            });
+        }
+        
+        // Botón para salir de fullscreen
+        if (fullscreenToggleBtn) {
+            fullscreenToggleBtn.addEventListener('click', () => {
+                this.toggleFullscreen();
+            });
+        }
+        
+        // Botón de iteraciones rápidas
+        if (toggleIterationsBtn) {
+            toggleIterationsBtn.addEventListener('click', () => {
+                const fractal = this.app.getCurrentFractal();
+                if (fractal) {
+                    const current = fractal.parameters.maxIterations;
+                    const newValue = current < 500 ? 1000 : current < 1000 ? 2000 : current < 2000 ? 4000 : 100;
+                    fractal.updateIterations(newValue);
+                    this.updateIterationDisplay(newValue);
+                    this.showToast(`Iteraciones: ${newValue}`);
                 }
             });
         }
         
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => {
-                this.app.saveSession();
-                this.showToast('Session saved');
+        // Botón para mostrar/ocultar parámetros
+        if (toggleParamsBtn) {
+            toggleParamsBtn.addEventListener('click', () => {
+                const paramsPanel = document.getElementById('fullscreenParams');
+                if (paramsPanel) {
+                    const isVisible = paramsPanel.style.display === 'block';
+                    paramsPanel.style.display = isVisible ? 'none' : 'block';
+                }
             });
         }
         
-        if (captureBtn) {
-            captureBtn.addEventListener('click', () => {
-                this.app.captureImage();
-                this.showToast('Image captured');
+        // Setup fullscreen parameters panel
+        this.setupFullscreenParams();
+    }
+    
+    /**
+     * Setup fullscreen parameters panel
+     */
+    setupFullscreenParams() {
+        const fsIterations = document.getElementById('fs-iterations');
+        const fsZoom = document.getElementById('fs-zoom');
+        const fsQuality = document.getElementById('fs-quality');
+        
+        if (fsIterations) {
+            fsIterations.addEventListener('input', () => {
+                const value = parseInt(fsIterations.value);
+                document.getElementById('fs-iter-val').textContent = value;
+                const fractal = this.app.getCurrentFractal();
+                if (fractal) {
+                    fractal.updateIterations(value);
+                }
             });
         }
+        
+        if (fsZoom) {
+            fsZoom.addEventListener('input', () => {
+                const value = parseFloat(fsZoom.value);
+                const zoom = Math.pow(10, value);
+                document.getElementById('fs-zoom-val').textContent = this.formatScientific(zoom);
+                this.app.getViewport().setTarget(
+                    this.app.getViewport().targetCenterX,
+                    this.app.getViewport().targetCenterY,
+                    zoom,
+                    this.app.getViewport().targetRotation
+                );
+            });
+        }
+        
+        if (fsQuality) {
+            fsQuality.addEventListener('change', () => {
+                const value = parseFloat(fsQuality.value);
+                const qualityText = fsQuality.options[fsQuality.selectedIndex].text;
+                document.getElementById('fs-quality-val').textContent = qualityText.split(' ')[0];
+                this.app.updateQualitySettings({ renderScale: value });
+                this.app.resize();
+            });
+        }
+    }
+    
+    /**
+     * Toggle fullscreen mode
+     */
+    toggleFullscreen() {
+        const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        if (isFullscreen) {
+            this.exitFullscreen();
+        } else {
+            this.enterFullscreen();
+        }
+    }
+
+    /**
+     * Enter fullscreen on the main layout (preferred) falling back to body
+     */
+    enterFullscreen() {
+        const appLayout = document.querySelector('.app-layout');
+        const target = appLayout || document.documentElement;
+        if (!target) return;
+
+        // Add helper class for CSS fallback
+        if (appLayout) appLayout.classList.add('fullscreen');
+
+        const request = target.requestFullscreen || target.webkitRequestFullscreen || target.mozRequestFullScreen || target.msRequestFullscreen;
+        if (request) {
+            request.call(target).then(() => {
+                this.showFullscreenControls();
+                this.showToast('Pantalla completa activada (ESC para salir)');
+                // Force a resize to adapt canvas
+                setTimeout(() => this.app.resize(true), 50);
+            }).catch(err => {
+                console.warn('Error fullscreen:', err);
+                this.showToast('No se pudo activar fullscreen');
+                if (appLayout) appLayout.classList.remove('fullscreen');
+            });
+        } else {
+            this.showToast('Fullscreen no soportado');
+        }
+    }
+
+    /**
+     * Exit fullscreen and remove helper class
+     */
+    exitFullscreen() {
+        const appLayout = document.querySelector('.app-layout');
+        if (appLayout) appLayout.classList.remove('fullscreen');
+
+        const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+        if (exit && (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement)) {
+            exit.call(document).catch(()=>{});
+        }
+        this.hideFullscreenControls();
+        this.showToast('Pantalla completa desactivada');
+        setTimeout(()=> this.app.resize(true), 50);
+    }
+    
+    /**
+     * Show fullscreen controls
+     */
+    showFullscreenControls() {
+        const controls = document.getElementById('fullscreenControls');
+        if (controls) {
+            controls.style.display = 'flex';
+            controls.style.visibility = 'visible';
+        }
+        
+        // Update button text
+        const headerBtn = document.getElementById('fullscreenBtn');
+        const toggleBtn = document.getElementById('fullscreenToggleBtn');
+        if (headerBtn) headerBtn.innerHTML = '🔲 Salir Pantalla Completa';
+        if (toggleBtn) toggleBtn.innerHTML = '🔲 Salir Fullscreen';
+        
+        console.log('Controles fullscreen mostrados'); // Debug
+    }
+    
+    /**
+     * Hide fullscreen controls
+     */
+    hideFullscreenControls() {
+        const controls = document.getElementById('fullscreenControls');
+        const params = document.getElementById('fullscreenParams');
+        
+        if (controls) {
+            controls.style.display = 'none';
+            controls.style.visibility = 'hidden';
+        }
+        if (params) {
+            params.style.display = 'none';
+        }
+        
+        // Update button text
+        const headerBtn = document.getElementById('fullscreenBtn');
+        const toggleBtn = document.getElementById('fullscreenToggleBtn');
+        if (headerBtn) headerBtn.innerHTML = '🔳 Pantalla Completa';
+        if (toggleBtn) toggleBtn.innerHTML = '🔳 Pantalla Completa';
+        
+        console.log('Controles fullscreen ocultados'); // Debug
+    }
+    
+    /**
+     * Update iteration display
+     */
+    updateIterationDisplay(value) {
+        const iterControl = this.parameterControls.get('iterations');
+        if (iterControl) {
+            iterControl.slider.value = value;
+            iterControl.display.textContent = value;
+            iterControl.input.value = value;
+        }
+        
+        // Update fullscreen display too
+        const fsIterVal = document.getElementById('fs-iter-val');
+        const fsIterSlider = document.getElementById('fs-iterations');
+        if (fsIterVal) fsIterVal.textContent = value;
+        if (fsIterSlider) fsIterSlider.value = value;
+    }
+    
+    /**
+     * Setup fullscreen change listeners
+     */
+    setupFullscreenListeners() {
+        const events = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+        
+        events.forEach(event => {
+            document.addEventListener(event, () => {
+                const isFullscreen = document.fullscreenElement || 
+                                   document.webkitFullscreenElement || 
+                                   document.mozFullScreenElement ||
+                                   document.msFullscreenElement;
+                
+                if (isFullscreen) {
+                    this.showFullscreenControls();
+                } else {
+                    this.hideFullscreenControls();
+                }
+                
+                // Force resize after fullscreen change
+                setTimeout(() => {
+                    if (this.app && this.app.resize) {
+                        this.app.resize(true);
+                    }
+                }, 100);
+            });
+        });
+    }
+    
+    /**
+     * Setup color controls for geometric fractals
+     */
+    setupColorControls() {
+        const primaryColor = document.getElementById('fractalColorPrimary');
+        const secondaryColor = document.getElementById('fractalColorSecondary');
+        
+        if (primaryColor) {
+            primaryColor.addEventListener('change', () => {
+                this.updateFractalColors();
+                this.showToast('Color principal actualizado');
+            });
+        }
+        
+        if (secondaryColor) {
+            secondaryColor.addEventListener('change', () => {
+                this.updateFractalColors();
+                this.showToast('Color secundario actualizado');
+            });
+        }
+    }
+    
+    /**
+     * Update fractal colors
+     */
+    updateFractalColors() {
+        const fractal = this.app.getCurrentFractal();
+        if (!fractal) return;
+        
+        const primaryColor = document.getElementById('fractalColorPrimary');
+        const secondaryColor = document.getElementById('fractalColorSecondary');
+        
+        if (primaryColor) {
+            const primary = this.hexToRgb(primaryColor.value);
+            
+            // Para fractales que solo usan un color (Koch, Sierpinski)
+            if (fractal.updateColor) {
+                fractal.updateColor(primary);
+            }
+            
+            // Para fractales que usan dos colores (Árbol)
+            if (secondaryColor && fractal.updateColors) {
+                const secondary = this.hexToRgb(secondaryColor.value);
+                fractal.updateColors(primary, secondary);
+            }
+            
+            // Para fractales que usan el método setColor genérico
+            if (fractal.setColor) {
+                fractal.setColor(primary);
+            }
+            
+            // Forzar re-render del fractal - no es necesario porque el renderLoop ya está activo
+            console.log('Color actualizado:', primary);
+        }
+    }
+    
+    /**
+     * Convert hex to RGB
+     */
+    hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16) / 255,
+            g: parseInt(result[2], 16) / 255,
+            b: parseInt(result[3], 16) / 255
+        } : null;
     }
 
     /**
@@ -400,42 +716,50 @@ class UIControls {
      */
     updateParameterVisibility(fractalType) {
         const juliaParams = document.getElementById('juliaParams');
-        const zoomControl = document.getElementById('zoom').parentElement;
-        const iterationsControl = document.getElementById('iterations').parentElement;
-        const depthControl = document.getElementById('depth').parentElement;
+        const iterationsControl = document.getElementById('iterationsControl');
+        const depthControl = document.getElementById('depthControl'); 
+        const radiusControl = document.getElementById('radiusControl');
+    // Color section removed
         const qualityControl = document.getElementById('quality').parentElement;
         
-        // Julia parameters
+        // Julia parameters - only for Julia set
         if (juliaParams) {
             juliaParams.style.display = fractalType === 'julia' ? 'block' : 'none';
         }
         
-        // Determine fractal type
+        // Determine fractal type categories
         const isGeometric = ['fractal-tree', 'koch-curve', 'sierpinski'].includes(fractalType);
+        const isMathematical = ['mandelbrot', 'julia'].includes(fractalType);
         
-        // Show/hide appropriate controls for geometric vs mathematical fractals
+        // Show/hide controls based on fractal type
         if (iterationsControl) {
-            iterationsControl.style.display = isGeometric ? 'none' : 'block';
+            iterationsControl.style.display = isMathematical ? 'block' : 'none';
         }
         
         if (depthControl) {
             depthControl.style.display = isGeometric ? 'block' : 'none';
         }
         
+        if (radiusControl) {
+            radiusControl.style.display = isMathematical ? 'block' : 'none';
+        }
+        
+        // Color section - only for geometric fractals
+    // (Color controls removed)
+        
         // Configure zoom control based on fractal type
-        if (zoomControl) {
+    const zoomSlider = document.getElementById('zoom');
+        if (zoomSlider) {
             if (isGeometric) {
                 // Limit zoom for geometric fractals
-                const zoomSlider = document.getElementById('zoom');
                 zoomSlider.max = '2'; // Limit to 100x zoom max
                 zoomSlider.style.opacity = '0.7';
-                zoomControl.title = 'Zoom limitado para fractales geométricos';
+                zoomSlider.parentElement.title = 'Zoom limitado para fractales geométricos';
             } else {
                 // Unlimited zoom for mathematical fractals (Mandelbrot, Julia)
-                const zoomSlider = document.getElementById('zoom');
                 zoomSlider.max = '15'; // Up to 10^15 zoom
                 zoomSlider.style.opacity = '1';
-                zoomControl.title = 'Zoom infinito disponible';
+                zoomSlider.parentElement.title = 'Zoom infinito disponible';
             }
         }
         
@@ -449,75 +773,92 @@ class UIControls {
                 qualityControl.title = 'Calidad crítica para zoom extremo sin pixelación';
             }
         }
+        
+        this.showToast(`Cambiado a: ${this.getFractalDisplayName(fractalType)}`);
+        
+        // Reset recursion depth to 1 when switching to geometric fractal
+        if (isGeometric) {
+            const depthSlider = document.getElementById('depth');
+            const depthInput = document.getElementById('depth-input');
+            const depthVal = document.getElementById('depth-val');
+            if (depthSlider && depthInput && depthVal) {
+                depthSlider.max = '30';
+                depthSlider.value = '1';
+                depthInput.value = '1';
+                depthVal.textContent = '1';
+            }
+        }
+    }
+    
+    /**
+     * Get display name for fractal type
+     */
+    getFractalDisplayName(fractalType) {
+        const names = {
+            'mandelbrot': 'Conjunto de Mandelbrot',
+            'julia': 'Conjunto de Julia',
+            'koch-curve': 'Curva de Koch',
+            'sierpinski': 'Triángulo de Sierpinski',
+            'fractal-tree': 'Árbol Fractal'
+        };
+        return names[fractalType] || fractalType;
     }
 
     /**
-     * Update UI for new fractal
+     * Update UI for new fractal (sync sliders with fractal parameters)
      */
     updateForFractal(fractal) {
         if (!fractal) return;
-
         this.isUpdating = true;
-
-        // Update parameter values from fractal
-        const params = fractal.parameters;
-        const fractalName = fractal.getName().toLowerCase();
-        const isGeometric = ['fractaltree', 'kochcurve', 'sierpinski'].includes(fractalName);
-        
-        if (isGeometric) {
-            // For geometric fractals, use depth parameter
-            if (params.depth !== undefined) {
-                this.updateSliderFromValue('depth', params.depth);
-            }
-        } else {
-            // For mathematical fractals, use maxIterations
+        try {
+            const params = fractal.parameters;
+            // Iterations (math fractals)
             if (params.maxIterations !== undefined) {
-                this.updateSliderFromValue('iterations', params.maxIterations);
+                const iter = this.parameterControls.get('iterations');
+                if (iter) {
+                    iter.slider.value = params.maxIterations;
+                    iter.display.textContent = params.maxIterations;
+                    iter.input.value = params.maxIterations;
+                }
             }
-        }
-        
-        if (params.escapeRadius !== undefined) {
-            this.updateSliderFromValue('radius', params.escapeRadius);
-        }
-        
-        // Update Julia-specific parameters
-        if (fractal.getName() === 'Julia') {
-            const cRealInput = document.getElementById('julia-c-real');
-            const cImagInput = document.getElementById('julia-c-imag');
-            
-            if (cRealInput && params.cReal !== undefined) {
-                cRealInput.value = params.cReal.toFixed(6);
+            // Depth (geometric)
+            if (params.recursionDepth !== undefined) {
+                const depthCtrl = this.parameterControls.get('depth');
+                if (depthCtrl) {
+                    depthCtrl.slider.value = params.recursionDepth;
+                    depthCtrl.display.textContent = params.recursionDepth;
+                    depthCtrl.input.value = params.recursionDepth;
+                }
             }
-            
-            if (cImagInput && params.cImag !== undefined) {
-                cImagInput.value = params.cImag.toFixed(6);
+            // Radius
+            if (params.escapeRadius !== undefined) {
+                const rad = this.parameterControls.get('radius');
+                if (rad) {
+                    rad.slider.value = params.escapeRadius;
+                    rad.display.textContent = params.escapeRadius.toFixed(1);
+                    rad.input.value = params.escapeRadius.toFixed(1);
+                }
             }
+            // Zoom
+            if (params.zoom !== undefined) {
+                const zoomCtrl = this.parameterControls.get('zoom');
+                if (zoomCtrl) {
+                    const logZoom = Math.log10(params.zoom);
+                    zoomCtrl.slider.value = logZoom;
+                    const formatted = this.formatScientific(params.zoom);
+                    zoomCtrl.display.textContent = formatted;
+                    zoomCtrl.input.value = formatted;
+                }
+            }
+        } finally {
+            this.isUpdating = false;
         }
-
-        this.isUpdating = false;
-    }
-
-    /**
-     * Format number in scientific notation
-     */
-    formatScientific(value) {
-        if (value === 0) return '0.0';
-        
-        const exponent = Math.floor(Math.log10(Math.abs(value)));
-        const mantissa = value / Math.pow(10, exponent);
-        
-        if (exponent >= -2 && exponent <= 3) {
-            return value.toFixed(Math.max(0, 3 - exponent));
-        }
-        
-        return `${mantissa.toFixed(2)}e${exponent >= 0 ? '+' : ''}${exponent}`;
     }
 
     /**
      * Show toast notification
      */
     showToast(message) {
-        // Create toast element
         const toast = document.createElement('div');
         toast.className = 'toast';
         toast.textContent = message;
@@ -536,23 +877,29 @@ class UIControls {
             transform: translateY(-20px);
             transition: all 0.3s ease;
         `;
-        
         document.body.appendChild(toast);
-        
-        // Animate in
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             toast.style.opacity = '1';
             toast.style.transform = 'translateY(0)';
-        }, 10);
-        
-        // Remove after 3 seconds
+        });
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateY(-20px)';
-            setTimeout(() => {
-                document.body.removeChild(toast);
-            }, 300);
+            setTimeout(() => toast.remove(), 300);
         }, 3000);
+    }
+
+    /**
+     * Format number similar to BaseFractal.formatScientific for UI usage
+     */
+    formatScientific(value) {
+        if (value === 0) return '0.0';
+        const exponent = Math.floor(Math.log10(Math.abs(value)));
+        const mantissa = value / Math.pow(10, exponent);
+        if (exponent >= -2 && exponent <= 3) {
+            return value.toFixed(Math.max(0, 3 - exponent));
+        }
+        return `${mantissa.toFixed(2)}e${exponent >= 0 ? '+' : ''}${exponent}`;
     }
 
     /**
@@ -717,4 +1064,32 @@ class UIControls {
             this.isUpdating = false;
         }
     }
+
+    /**
+     * Configurar controles del modo pantalla completa
+     */
+    setupFullscreenControls() {
+        const captureFullscreenBtn = document.getElementById('captureFullscreenBtn');
+        const resetFullscreenBtn = document.getElementById('resetFullscreenBtn');
+        const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn');
+
+        if (captureFullscreenBtn) {
+            captureFullscreenBtn.addEventListener('click', () => {
+                this.app.captureImage();
+                this.showToast('Imagen guardada en modo pantalla completa');
+            });
+        }
+
+        if (resetFullscreenBtn) {
+            resetFullscreenBtn.addEventListener('click', () => {
+                this.app.viewport.reset();
+                this.showToast('Vista reiniciada');
+            });
+        }
+
+        if (fullscreenToggleBtn) {
+            fullscreenToggleBtn.addEventListener('click', () => this.toggleFullscreen());
+        }
+    }
+
 }

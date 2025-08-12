@@ -12,7 +12,7 @@ class KochCurveFractal extends BaseFractal {
             centerX: 0.0,
             centerY: 0.0,
             zoom: 1.0,
-            recursionDepth: 4,
+            recursionDepth: 1,
             lineWidth: 2.0,
             colorScheme: 'classic',
             showConstruction: false

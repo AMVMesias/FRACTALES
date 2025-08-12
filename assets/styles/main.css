@@ -14,6 +14,149 @@ body {
     overflow: hidden;
 }
 
+/* Controles flotantes para modo fullscreen */
+.fullscreen-controls {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+}
+
+.fullscreen-controls:hover {
+    opacity: 1;
+}
+
+.fullscreen-btn {
+    background: rgba(17, 17, 27, 0.95);
+    border: 1px solid #45475a;
+    color: #cdd6f4;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+    min-width: 140px;
+    text-align: left;
+}
+
+.fullscreen-btn:hover {
+    background: rgba(137, 180, 250, 0.2);
+    border-color: #89b4fa;
+    transform: translateY(-1px);
+}
+
+.fullscreen-btn:active {
+    transform: translateY(0);
+}
+
+/* Panel de parámetros flotante */
+.fullscreen-params {
+    position: fixed;
+    top: 60px;
+    left: 20px;
+    background: rgba(17, 17, 27, 0.95);
+    border: 1px solid #45475a;
+    border-radius: 8px;
+    padding: 15px;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    min-width: 280px;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+    transform: translateY(-10px);
+}
+
+.fullscreen-params .param-control {
+    margin-bottom: 15px;
+}
+
+.fullscreen-params .param-label {
+    color: #89b4fa;
+    font-size: 13px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.fullscreen-params input[type="range"] {
+    width: 100%;
+    margin: 5px 0;
+}
+
+.fullscreen-params select {
+    width: 100%;
+    background: #313244;
+    border: 1px solid #45475a;
+    color: #cdd6f4;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+/* Fullscreen mode styles */
+:fullscreen {
+    background: #000 !important;
+}
+
+:fullscreen .app-layout {
+    grid-template-areas: "canvas";
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+}
+
+:fullscreen .header,
+:fullscreen .params-panel,
+:fullscreen .data-panel,
+:fullscreen .console {
+    display: none !important;
+}
+
+:fullscreen .viewport {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 999 !important;
+}
+
+:fullscreen canvas {
+    width: 100vw !important;
+    height: 100vh !important;
+}
+
+/* Mostrar controles flotantes en fullscreen */
+:fullscreen .fullscreen-controls {
+    display: flex !important;
+    z-index: 1001 !important;
+}
+
+:fullscreen .fullscreen-params {
+    z-index: 1001 !important;
+}
+
+/* Color picker styles */
+.color-picker {
+    width: 50px;
+    height: 30px;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    background: none;
+    cursor: pointer;
+}
+
+.color-picker::-webkit-color-swatch {
+    border: none;
+    border-radius: 3px;
+}
+
 .app-layout {
     display: grid;
     grid-template-areas:
@@ -500,4 +643,169 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Modo Pantalla Completa Real */
+.app-layout.fullscreen,
+:fullscreen .app-layout,
+:-webkit-full-screen .app-layout,
+:-moz-full-screen .app-layout {
+    grid-template-areas: "canvas";
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    height: 100vh;
+    width: 100vw;
+}
+
+.app-layout.fullscreen .params-panel,
+.app-layout.fullscreen .data-panel,
+.app-layout.fullscreen .console,
+.app-layout.fullscreen .header,
+:fullscreen .params-panel,
+:fullscreen .data-panel,
+:fullscreen .console,
+:fullscreen .header,
+:-webkit-full-screen .params-panel,
+:-webkit-full-screen .data-panel,
+:-webkit-full-screen .console,
+:-webkit-full-screen .header,
+:-moz-full-screen .params-panel,
+:-moz-full-screen .data-panel,
+:-moz-full-screen .console,
+:-moz-full-screen .header {
+    display: none;
+}
+
+.app-layout.fullscreen .canvas-area,
+:fullscreen .canvas-area,
+:-webkit-full-screen .canvas-area,
+:-moz-full-screen .canvas-area {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Controles flotantes en modo fullscreen */
+.fullscreen-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    /* Evitar que el contenedor se expanda a todo el ancho (se heredaba left:20px del bloque anterior) */
+    left: auto !important;
+    width: auto;
+    align-items: flex-start; /* No estirar botones al ancho completo */
+}
+
+.app-layout.fullscreen .fullscreen-controls,
+:fullscreen .fullscreen-controls,
+:-webkit-full-screen .fullscreen-controls,
+:-moz-full-screen .fullscreen-controls {
+    display: flex;
+}
+
+.fullscreen-btn {
+    background: rgba(24, 24, 37, 0.9);
+    border: 1px solid #313244;
+    color: #cdd6f4;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    backdrop-filter: blur(10px);
+}
+
+.fullscreen-btn:hover {
+    background: rgba(137, 180, 250, 0.2);
+    border-color: #89b4fa;
+    color: #89b4fa;
+}
+
+/* Información de coordenadas más visible en fullscreen */
+.app-layout.fullscreen .coordinates,
+:fullscreen .coordinates,
+:-webkit-full-screen .coordinates,
+:-moz-full-screen .coordinates {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(24, 24, 37, 0.9);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #313244;
+    backdrop-filter: blur(10px);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.9rem;
+}
+
+/* Panel de parámetros básicos flotante */
+.fullscreen-params {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 999;
+    background: rgba(24, 24, 37, 0.95);
+    border: 1px solid #313244;
+    border-radius: 8px;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+    display: none;
+    max-width: 300px;
+}
+
+.app-layout.fullscreen .fullscreen-params.visible,
+:fullscreen .fullscreen-params.visible,
+:-webkit-full-screen .fullscreen-params.visible,
+:-moz-full-screen .fullscreen-params.visible {
+    display: block;
+}
+
+.fullscreen-params .param-control {
+    margin-bottom: 10px;
+}
+
+.fullscreen-params .param-control:last-child {
+    margin-bottom: 0;
+}
+
+/* Tooltips para explicar parámetros */
+.param-hint {
+    font-size: 0.7rem;
+    color: #a6adc8;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Canvas en modo fullscreen ocupa toda la pantalla */
+.app-layout.fullscreen .fractal-canvas,
+:fullscreen .fractal-canvas,
+:-webkit-full-screen .fractal-canvas,
+:-moz-full-screen .fractal-canvas {
+    width: 100vw !important;
+    height: 100vh !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Viewport info en fullscreen */
+.app-layout.fullscreen .viewport-info,
+:fullscreen .viewport-info,
+:-webkit-full-screen .viewport-info,
+:-moz-full-screen .viewport-info {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(24, 24, 37, 0.9);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid #313244;
+    backdrop-filter: blur(10px);
+    font-size: 0.8rem;
 }

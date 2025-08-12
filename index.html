@@ -15,75 +15,80 @@
                 <div class="session-info">Session: fractal_visualizer_001 | User: researcher</div>
             </div>
             <div class="header-actions">
-                <button class="header-btn" id="exportBtn">export_data()</button>
-                <button class="header-btn" id="saveBtn">save_session()</button>
-                <button class="header-btn" id="captureBtn">capture_image()</button>
-                <button class="header-btn" id="resetViewBtn">reset_view()</button>
+                <button class="header-btn" id="captureBtn">📸 Guardar Imagen</button>
+                <button class="header-btn" id="resetViewBtn">🏠 Reiniciar Vista</button>
+                <button class="header-btn" id="fullscreenBtn">🔳 Pantalla Completa</button>
             </div>
         </header>
 
         <!-- Parameter Panel -->
         <aside class="params-panel">
             <div class="params-section">
-                <div class="section-header">Fractal Type</div>
+                <div class="section-header">Tipo de Fractal</div>
                 <div class="fractal-selector" id="fractalSelector">
                     <div class="fractal-option" data-fractal="koch-curve">
-                        <span>📐</span> Koch Curve
+                        <span>📐</span> Curva de Koch
                     </div>
                     <div class="fractal-option" data-fractal="sierpinski">
-                        <span>△</span> Sierpinski Triangle
+                        <span>△</span> Triángulo de Sierpinski
                     </div>
                     <div class="fractal-option active" data-fractal="mandelbrot">
-                        <span>∞</span> Mandelbrot Set
+                        <span>∞</span> Conjunto de Mandelbrot
                     </div>
                     <div class="fractal-option" data-fractal="julia">
-                        <span>∿</span> Julia Set
+                        <span>∿</span> Conjunto de Julia
                     </div>
                     <div class="fractal-option" data-fractal="fractal-tree">
-                        <span>🌿</span> Fractal Tree
+                        <span>🌿</span> Árbol Fractal
                     </div>
                 </div>
             </div>
 
             <div class="params-section">
-                <div class="section-header">Computation Parameters</div>
+                <div class="section-header">Parámetros de Cálculo</div>
                 
-                <div class="param-control">
+                <!-- Profundidad de Recursión - Solo para fractales geométricos -->
+                <div class="param-control" id="depthControl" style="display: none;">
                     <div class="param-label">
-                        Max Iterations
+                        Profundidad de Recursión
+                        <span class="param-value" id="depth-val">1</span>
+                    </div>
+                    <input type="range" class="scientific-slider" min="1" max="30" value="1" id="depth">
+                    <input type="text" class="param-input" value="1" id="depth-input">
+                    <div class="param-hint">💡 Máx 30. Valores altos pueden bajar el rendimiento.</div>
+                </div>
+                
+                <div class="param-control" id="iterationsControl">
+                    <div class="param-label">
+                        Iteraciones Máximas
                         <span class="param-value" id="iter-val">1000</span>
                     </div>
                     <input type="range" class="scientific-slider" min="50" max="4000" value="1000" id="iterations">
                     <input type="text" class="param-input" value="1000" id="iter-input">
+                    <div class="param-hint">💡 Controla el detalle del fractal matemático. Más iteraciones = más precisión en bordes</div>
                 </div>
 
-                <div class="param-control">
+                <div class="param-control" id="radiusControl">
                     <div class="param-label">
-                        Escape Radius
+                        Radio de Escape
                         <span class="param-value" id="radius-val">2.0</span>
                     </div>
                     <input type="range" class="scientific-slider" min="1" max="10" step="0.1" value="2" id="radius">
                     <input type="text" class="param-input" value="2.0" id="radius-input">
+                    <div class="param-hint">⚠️ Umbral de divergencia: si |z| > radio, el punto escapa. 2.0 es matemáticamente correcto para Mandelbrot/Julia. Cambiar produce efectos sutiles en los bordes.</div>
                 </div>
 
                 <div class="param-control">
                     <div class="param-label">
-                        Zoom Level
+                        Nivel de Zoom
                         <span class="param-value" id="zoom-val">1.0e+0</span>
                     </div>
                     <input type="range" class="scientific-slider" min="-10" max="15" step="0.1" value="0" id="zoom">
                     <input type="text" class="param-input" value="1.0" id="zoom-input">
                 </div>
-
-                <div class="param-control">
-                    <div class="param-label">
-                        Recursion Depth
-                        <span class="param-value" id="depth-val">5</span>
-                    </div>
-                    <input type="range" class="scientific-slider" min="1" max="12" value="5" id="depth">
-                    <input type="text" class="param-input" value="5" id="depth-input">
-                </div>
             </div>
+
+            <!-- Sección de colores eliminada -->
 
             <div class="params-section">
                 <div class="section-header">Calidad y Rendimiento</div>
@@ -124,7 +129,7 @@
             </div>
 
             <div class="params-section">
-                <div class="section-header">Transform Controls</div>
+                <div class="section-header">Controles de Transformación</div>
                 <div class="transform-matrix">
                     <button class="matrix-btn" data-action="move" data-dir="nw">↖</button>
                     <button class="matrix-btn" data-action="move" data-dir="n">↑</button>
@@ -138,18 +143,18 @@
                 </div>
                 
                 <div class="param-control" style="margin-top: 15px;">
-                    <div class="param-label">Center X</div>
+                    <div class="param-label">Centro X</div>
                     <input type="text" class="param-input" value="-0.5" id="center-x">
                 </div>
                 
                 <div class="param-control">
-                    <div class="param-label">Center Y</div>
+                    <div class="param-label">Centro Y</div>
                     <input type="text" class="param-input" value="0.0" id="center-y">
                 </div>
 
                 <div class="param-control">
                     <div class="param-label">
-                        Rotation (°)
+                        Rotación (°)
                         <span class="param-value" id="rotation-val">0</span>
                     </div>
                     <input type="range" class="scientific-slider" min="0" max="360" value="0" id="rotation">
@@ -158,13 +163,13 @@
             </div>
 
             <div class="params-section" id="juliaParams" style="display: none;">
-                <div class="section-header">Julia Set Parameters</div>
+                <div class="section-header">Parámetros del Conjunto de Julia</div>
                 <div class="param-control">
-                    <div class="param-label">Constant C (Real)</div>
+                    <div class="param-label">Constante C (Real)</div>
                     <input type="text" class="param-input" value="-0.7" id="julia-c-real">
                 </div>
                 <div class="param-control">
-                    <div class="param-label">Constant C (Imaginary)</div>
+                    <div class="param-label">Constante C (Imaginaria)</div>
                     <input type="text" class="param-input" value="0.27015" id="julia-c-imag">
                 </div>
             </div>
@@ -175,11 +180,16 @@
             <div class="viewport">
                 <canvas id="fractalCanvas" class="fractal-canvas"></canvas>
                 
-                <div class="viewport-info">
-                    Rendering: WebGL | Memory: <span id="memoryUsage">0</span>MB | FPS: <span id="fpsCounter">60</span>
-                </div>
-                
-                <!-- Performance Warning for extreme zooms -->
+            <!-- Controles flotantes para modo fullscreen -->
+            <div class="fullscreen-controls" id="fullscreenControls" style="display: none;">
+                <button class="fullscreen-btn" id="captureFullscreenBtn" title="Guardar una imagen PNG del fractal actual">📸 Guardar Imagen</button>
+                <button class="fullscreen-btn" id="resetFullscreenBtn" title="Reinicia el centro, zoom y rotación a los valores iniciales">🏠 Reiniciar Vista</button>
+                <button class="fullscreen-btn" id="fullscreenToggleBtn" title="Salir del modo pantalla completa">🔲 Salir Fullscreen</button>
+            </div>
+            
+            <div class="viewport-info">
+                Renderizado: WebGL | Memoria: <span id="memoryUsage">0</span>MB | FPS: <span id="fpsCounter">60</span>
+            </div>                <!-- Performance Warning for extreme zooms -->
                 <div class="performance-warning" id="performanceWarning" style="display: none; position: absolute; top: 10px; right: 10px; background: rgba(255, 165, 0, 0.9); color: black; padding: 10px; border-radius: 5px; font-weight: bold; z-index: 1000;">
                     ⚠️ Zoom extremo - Renderizado lento pero sin pixelación
                 </div>
@@ -268,8 +278,8 @@
         <footer class="console">
             <div class="console-header">
                 <span>🔬</span>
-                Computation Log & Debug Output
-                <button class="console-clear" id="clearConsole">Clear</button>
+                Registro de Cálculos y Depuración
+                <button class="console-clear" id="clearConsole">Limpiar</button>
             </div>
             <div class="console-content" id="consoleContent">
                 <!-- Log entries will be added dynamically -->

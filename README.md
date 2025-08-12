@@ -1,53 +1,81 @@
-# Visualizador Interactivo de Fractales - FractalLab
+# FractalLab - Visualizador Interactivo de Fractales
 
 ## Descripción del Proyecto
 
-FractalLab es un visualizador interactivo de fractales desarrollado con WebGL que permite generar, visualizar y manipular fractales clásicos como el Conjunto de Mandelbrot, Conjunto de Julia, Curva de Koch, Triángulo de Sierpinski y Árbol Fractal Recursivo.
+FractalLab es un visualizador interactivo de fractales de alta calidad desarrollado con WebGL que permite generar, visualizar y manipular fractales clásicos. Incluye modo pantalla completa, controles intuitivos y capacidades de guardado de imágenes en alta resolución.
 
-## Estructura del Proyecto
+## ✨ Características Principales
+
+### 🎨 Fractales Disponibles
+- **Conjunto de Mandelbrot**: Implementación completa con coloreado suave y zoom infinito
+- **Conjunto de Julia**: Múltiples presets y constantes personalizables
+- **Curva de Koch**: Fractal geométrico clásico
+- **Triángulo de Sierpinski**: Fractal de autosimilitud
+- **Árbol Fractal**: Estructura recursiva natural
+
+### 🖥️ Interfaz y Controles
+- **Modo Pantalla Completa**: Visualización inmersiva con controles flotantes
+- **Navegación Intuitiva**: Pan, zoom y rotación con mouse/touch
+- **Controles de Calidad**: Múltiples niveles de renderizado (0.25x a 10x)
+- **Parámetros Ajustables**: Iteraciones, radio de escape, zoom, etc.
+- **Controles de Teclado**: Atajos rápidos (ESC, F11, Ctrl+R, etc.)
+
+### 📸 Funciones de Guardado
+- **Captura de Imágenes**: Guardado en PNG de alta calidad sin duplicados
+- **Nombres Descriptivos**: Incluyen tipo de fractal, zoom y timestamp
+- **Prevención de Duplicados**: Sistema mejorado que evita descargas múltiples
+
+### ⚙️ Parámetros Explicados
+
+#### Radio de Escape
+El **Radio de Escape** determina el límite matemático para decidir si un punto pertenece al conjunto fractal:
+- **Valor estándar**: 2.0 (recomendado para Mandelbrot y Julia)
+- **Valores mayores**: Más precisión en los bordes, renderizado más lento
+- **Valores menores**: Renderizado más rápido, menor precisión
+- **Función**: Si |z| > radio_escape, el punto "escapa" y se considera fuera del conjunto
+
+## 🏗️ Estructura del Proyecto
 
 ```
-Proyecto/
-├── index.html                      # Archivo principal HTML
+FractalLab/
+├── index.html                      # Archivo principal de la aplicación
 ├── assets/                         # Recursos estáticos
 │   └── styles/
-│       └── main.css               # Estilos principales
-├── src/                           # Código fuente
-│   ├── app.js                     # Aplicación principal
-│   ├── utils/                     # Utilidades
-│   │   ├── webgl-utils.js         # Utilidades WebGL
-│   │   ├── math-utils.js          # Utilidades matemáticas
-│   │   └── transform-utils.js     # Utilidades de transformación
+│       └── main.css               # Estilos CSS con soporte fullscreen
+├── src/                           # Código fuente modular
+│   ├── app.js                     # Aplicación principal y coordinador
+│   ├── utils/                     # Utilidades especializadas
+│   │   ├── webgl-utils.js         # Gestión de contexto WebGL
+│   │   ├── math-utils.js          # Operaciones matemáticas complejas
+│   │   └── transform-utils.js     # Viewport y transformaciones
 │   ├── fractals/                  # Implementaciones de fractales
 │   │   ├── base-fractal.js        # Clase base abstracta
-│   │   ├── mandelbrot.js          # Conjunto de Mandelbrot
-│   │   ├── julia.js               # Conjunto de Julia
-│   │   ├── koch-curve.js          # Curva de Koch (por implementar)
-│   │   ├── sierpinski.js          # Triángulo de Sierpinski (por implementar)
-│   │   └── fractal-tree.js        # Árbol Fractal (por implementar)
-│   └── ui/                        # Interfaz de usuario
-│       ├── controls.js            # Controles de parámetros
-│       ├── console.js             # Sistema de consola
+│   │   ├── mandelbrot.js          # Conjunto de Mandelbrot optimizado
+│   │   ├── julia.js               # Conjunto de Julia interactivo
+│   │   ├── koch-curve.js          # Curva de Koch geométrica
+│   │   ├── sierpinski.js          # Triángulo de Sierpinski
+│   │   └── fractal-tree.js        # Árbol fractal recursivo
+│   └── ui/                        # Interfaz de usuario modular
+│       ├── controls.js            # Controles y modo fullscreen
+│       ├── console.js             # Sistema de registro
 │       └── performance-monitor.js # Monitor de rendimiento
-└── README.md                      # Este archivo
+├── *.html                         # Archivos de ejemplo y pruebas
+└── README.md                      # Documentación completa
 ```
 
-## Características Implementadas
+## 🎯 Funcionalidades Implementadas
 
-### ✅ Fractales Completados
-- **Conjunto de Mandelbrot**: Implementación completa con coloreado suave
-- **Conjunto de Julia**: Múltiples presets y constantes personalizables
+### ✅ Renderizado de Alta Calidad
+- **WebGL Optimizado**: Shaders personalizados para máximo rendimiento
+- **Zoom Infinito**: Capacidad de ampliar hasta niveles microscópicos
+- **Calidad Adaptativa**: Ajuste automático según el nivel de zoom
+- **Antialiasing**: Múltiples niveles para eliminar pixelación
 
-### ✅ Funcionalidades Core
-- **Navegación Interactiva**:
-  - Pan con mouse/touch
-  - Zoom con rueda del mouse o gestos de pellizco
-  - Rotación con controles de teclado
-  - Controles direccionales con matriz de botones
-
-- **Controles de Parámetros**:
-  - Número máximo de iteraciones (50-1000)
-  - Radio de escape (1-10)
+### ✅ Interfaz de Usuario Completa
+- **Modo Pantalla Completa**: Visualización inmersiva sin distracciones
+- **Controles Flotantes**: Acceso rápido a funciones principales en fullscreen
+- **Panel de Parámetros**: Controles detallados con explicaciones
+- **Monitor de Rendimiento**: Métricas en tiempo real de FPS, memoria y GPU
   - Nivel de zoom (científico con notación exponencial)
   - Centro de coordenadas
   - Rotación (0-360°)

@@ -12,7 +12,7 @@ class FractalTreeFractal extends BaseFractal {
             centerX: 0.0,
             centerY: -0.3,
             zoom: 1.0,
-            recursionDepth: 8,
+            recursionDepth: 1,
             branchAngle: 30,  // degrees
             lengthRatio: 0.7,
             branchCount: 2,

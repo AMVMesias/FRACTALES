@@ -12,7 +12,7 @@ class SierpinskiFractal extends BaseFractal {
             centerX: 0.0,
             centerY: 0.0,
             zoom: 1.0,
-            recursionDepth: 6,
+            recursionDepth: 1,
             colorScheme: 'classic',
             renderMode: 'filled', // 'filled' or 'outline'
             animateColors: false

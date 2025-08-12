@@ -388,8 +388,9 @@ class TransformUtils {
      * Keyboard shortcuts for viewport control
      */
     static KeyboardHandler = class {
-        constructor(viewport) {
+        constructor(viewport, uiControls = null) {
             this.viewport = viewport;
+            this.uiControls = uiControls;
             this.keys = new Set();
             this.setupEventListeners();
         }
@@ -407,6 +408,22 @@ class TransformUtils {
                     if (event.ctrlKey) {
                         event.preventDefault();
                         this.viewport.reset();
+                    }
+                    break;
+                case 'Escape':
+                    // Salir de modo fullscreen con ESC
+                    event.preventDefault();
+                    if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement) {
+                        if (this.uiControls && this.uiControls.exitFullscreen) {
+                            this.uiControls.exitFullscreen();
+                        }
+                    }
+                    break;
+                case 'F11':
+                    // Alternar fullscreen con F11
+                    event.preventDefault();
+                    if (this.uiControls && this.uiControls.toggleFullscreen) {
+                        this.uiControls.toggleFullscreen();
                     }
                     break;
                 case 'Equal':
